@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "914845598304",
+    "project_id": "tubemod-b8286",
+    "storage_bucket": "tubemod-b8286.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:914845598304:android:eadd43a9df61fdabf43905",
+        "android_client_info": {
+          "package_name": "com.example.tubemod_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxhjiuHdMUITnx4WaRnjrkvNTVPUgkJiY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -12,7 +12,20 @@
           "package_name": "com.example.tubemod_mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "914845598304-dlaf8kgoupag04bkvsq5tvljeon7u2oa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tubemod_mobile",
+            "certificate_hash": "28a8ba4f7c8c60f1c2a35e3dedfaab10ea66f8e7"
+          }
+        },
+        {
+          "client_id": "914845598304-6i39d93d9f2p9n2mdj3uq5uvbpihkmtj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBxhjiuHdMUITnx4WaRnjrkvNTVPUgkJiY"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "914845598304-6i39d93d9f2p9n2mdj3uq5uvbpihkmtj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -20,18 +20,18 @@ dependencies:
   provider: ^6.1.1
   
   # HTTP & API
-  http: ^1.6.0
+  http: ^1.1.0
   
   # Local Storage
-  shared_preferences: ^2.5.5
+  shared_preferences: ^2.0.0
   
   # Google Sign In
-  google_sign_in: ^6.3.0
+  google_sign_in: ^6.1.5
   google_sign_in_android: ^6.2.1
 
   dio: ^5.4.0
   dio_cookie_manager: ^3.1.1
-  cookie_jar: ^4.0.0
+  cookie_jar: 4.0.9
 
   flutter_dotenv: ^5.2.1
   

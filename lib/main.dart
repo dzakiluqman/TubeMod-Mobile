@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/constants/app_colors.dart';
+import 'core/utils/session_manager.dart'; // ADD THIS
 import 'features/screens/splash_screen.dart';
 import 'features/screens/intro_screen.dart';
 import 'features/screens/home_screen.dart';
@@ -12,8 +13,16 @@ import 'features/history/history_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables
   await dotenv.load(fileName: ".env");
 
+  // ✅ ADD: Initialize SessionManager for JWT storage
+  await SessionManager.instance.init();
+
+  // Debug: Print current session state
+  SessionManager.instance.debugPrintSession();
+
+  // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

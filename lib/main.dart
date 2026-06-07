@@ -3,12 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/constants/app_colors.dart';
-import 'core/utils/session_manager.dart'; // ADD THIS
+import 'core/utils/session_manager.dart';
 import 'features/screens/splash_screen.dart';
 import 'features/screens/intro_screen.dart';
 import 'features/screens/home_screen.dart';
 import 'features/keywords/keywords_management_screen.dart';
 import 'features/history/history_screen.dart';
+import 'features/profile/profile.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,7 @@ Future<void> main() async {
   // Load environment variables
   await dotenv.load(fileName: ".env");
 
-  // ✅ ADD: Initialize SessionManager for JWT storage
+  // Initialize SessionManager for JWT storage
   await SessionManager.instance.init();
 
   // Debug: Print current session state
@@ -42,6 +43,7 @@ class TubeModApp extends StatelessWidget {
       title: 'TubeMod',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        useMaterial3: true,
         primaryColor: AppColors.primaryPurple,
         scaffoldBackgroundColor: AppColors.backgroundWhite,
         textTheme: GoogleFonts.montserratTextTheme(
@@ -59,6 +61,7 @@ class TubeModApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/history': (context) => const HistoryScreen(),
         '/keywords': (context) => const KeywordsManagementScreen(),
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }

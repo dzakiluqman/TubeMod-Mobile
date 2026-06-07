@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.pushReplacementNamed(context, '/keywords');
         break;
       case 3:
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        Navigator.pushReplacementNamed(context, '/profile');
         break;
     }
   }

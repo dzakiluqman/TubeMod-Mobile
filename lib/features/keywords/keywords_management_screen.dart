@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_style.dart';
 import '../../core/widgets/custom_bottom_navbar.dart';
+import '../../core/data/keyword_repository.dart'; 
 
 class KeywordsManagementScreen extends StatefulWidget {
   const KeywordsManagementScreen({Key? key}) : super(key: key);
@@ -17,32 +18,7 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
   final TextEditingController _keywordController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
 
-  final List<Map<String, String>> _keywords = [
-    {
-      'keyword': 'judol',
-      'category': 'spam',
-    },
-    {
-      'keyword': 'slot gacor',
-      'category': 'gambling',
-    },
-    {
-      'keyword': 'bodoh',
-      'category': 'hate',
-    },
-    {
-      'keyword': 'anjing',
-      'category': 'hate',
-    },
-    {
-      'keyword': 'klik link ini',
-      'category': 'spam',
-    },
-    {
-      'keyword': 'scam',
-      'category': 'fraud',
-    },
-  ];
+  List<Map<String, String>> get _keywords => KeywordRepository.keywords;
 
   @override
   Widget build(BuildContext context) {
@@ -198,7 +174,6 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
                       ),
                       child: Row(
                         children: [
-                          // Keyword
                           Expanded(
                             flex: 3,
                             child: Text(
@@ -207,19 +182,16 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
                                 color: Color(0xFF4A007E),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
-
-                          // Divider
                           Container(
                             width: 1,
                             height: 18,
                             color: Colors.grey.shade400,
                           ),
                           const SizedBox(width: 12),
-
-                          // Category
                           Expanded(
                             flex: 3,
                             child: Text(
@@ -228,11 +200,10 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
                                 color: Color(0xFF4A007E),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
-
-                          // Edit Button
                           InkWell(
                             onTap: () => _editKeyword(index),
                             child: Container(
@@ -248,10 +219,7 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(width: 12),
-
-                          // Delete Button
                           InkWell(
                             onTap: () => _deleteKeyword(index),
                             child: const Icon(
@@ -271,21 +239,24 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
         ),
       ),
 
-      // ================= NAVBAR =================
+      // ================= NAVBAR FIX (ANTI-LOCK) =================
       bottomNavigationBar: CustomBottomNavbar(
         selectedIndex: 2,
         onTap: (index) {
+          if (index == 2) return; // Mengabaikan klik jika sudah di halaman ini
+
           switch (index) {
             case 0:
               Navigator.pushReplacementNamed(context, '/home');
               break;
             case 1:
-              Navigator.pushNamed(context, '/history');
+              Navigator.pushReplacementNamed(context, '/history');
               break;
             case 2:
               break;
             case 3:
-              Navigator.pushNamed(context, '/dashboard');
+              // ✅ SEKARANG DISERAGAMKAN: Menggunakan pushReplacementNamed agar langsung lancar tanpa terkunci!
+              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
@@ -295,80 +266,77 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
 
   // ================= HEADER =================
   Widget _buildHeader() {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.fromLTRB(30, 22, 30, 40),
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color(0xFF6500A3),
-          Color(0xFF50007B),
-        ],
-      ),
-      borderRadius: BorderRadius.only(
-        bottomLeft: Radius.circular(40),
-        bottomRight: Radius.circular(40),
-      ),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/tubemod_text.png',
-                  height: 28, 
-                  fit: BoxFit.contain,
-                ),
-              ],
-            ),
-            const Icon(
-              Icons.menu_rounded,
-              color: Colors.white,
-              size: 30,
-            ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(30, 22, 30, 40),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF6500A3),
+            Color(0xFF50007B),
           ],
         ),
-        const SizedBox(height: 55),
-        const SizedBox(
-          width: 270,
-          child: Text(
-            'One tool to manage\ntoxic comments\nin your YouTube\nchannels.',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              height: 1.15,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(40),
+          bottomRight: Radius.circular(40),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/images/tubemod_text.png',
+                    height: 28,
+                    fit: BoxFit.contain,
+                  ),
+                ],
+              ),
+              const Icon(
+                Icons.menu_rounded,
+                color: Colors.white,
+                size: 30,
+              ),
+            ],
+          ),
+          const SizedBox(height: 55),
+          const SizedBox(
+            width: 270,
+            child: Text(
+              'One tool to manage\ntoxic comments\nin your YouTube\nchannels.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                height: 1.15,
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
-  // ================= ADD =================
   void _addKeyword() {
     if (_keywordController.text.isNotEmpty &&
         _categoryController.text.isNotEmpty) {
       setState(() {
-        _keywords.add({
-          'keyword': _keywordController.text,
-          'category': _categoryController.text,
-        });
-
+        KeywordRepository.add(
+          _keywordController.text.trim(),
+          _categoryController.text.trim(),
+        );
         _keywordController.clear();
         _categoryController.clear();
       });
     }
   }
 
-  // ================= EDIT =================
   void _editKeyword(int index) {
     _keywordController.text = _keywords[index]['keyword']!;
     _categoryController.text = _keywords[index]['category']!;
@@ -412,11 +380,11 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
           TextButton(
             onPressed: () {
               setState(() {
-                _keywords[index] = {
-                  'keyword': _keywordController.text,
-                  'category': _categoryController.text,
-                };
-
+                KeywordRepository.updateAt(
+                  index,
+                  _keywordController.text.trim(),
+                  _categoryController.text.trim(),
+                );
                 _keywordController.clear();
                 _categoryController.clear();
               });
@@ -429,10 +397,9 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
     );
   }
 
-  // ================= DELETE =================
   void _deleteKeyword(int index) {
     setState(() {
-      _keywords.removeAt(index);
+      KeywordRepository.removeAt(index);
     });
   }
 }

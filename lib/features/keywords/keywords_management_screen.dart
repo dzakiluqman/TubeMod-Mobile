@@ -1,10 +1,13 @@
+// lib/features/screens/keywords_management_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_style.dart';
 import '../../core/widgets/custom_bottom_navbar.dart';
-import '../../core/data/keyword_repository.dart'; 
+import '../../core/widgets/custom_header.dart';
+import '../../services/api_service.dart';
 
 class KeywordsManagementScreen extends StatefulWidget {
   const KeywordsManagementScreen({Key? key}) : super(key: key);
@@ -18,329 +21,151 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
   final TextEditingController _keywordController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
 
-  List<Map<String, String>> get _keywords => KeywordRepository.keywords;
+  bool isLoading = true;
+  bool isAdding = false;
+  List<Map<String, dynamic>> keywords = [];
+
+  // For edit mode
+  int? editingKeywordId;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // ================= HEADER =================
-            _buildHeader(),
-
-            const SizedBox(height: 24),
-
-            // ================= TITLE =================
-            Center(
-              child: Text(
-                'Keywords Management',
-                style: GoogleFonts.montserrat(
-                  color: const Color(0xFF4A007E),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // ================= INPUT =================
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(26),
-                        border: Border.all(
-                          color: const Color(0xFF4A007E),
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _keywordController,
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                hintText: 'Keyword',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey,
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 14,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 24,
-                            color: Colors.grey.shade400,
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _categoryController,
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                hintText: 'Category',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey,
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 14,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF4A007E),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(26),
-                        onTap: _addKeyword,
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ================= KEYWORDS LIST =================
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFF50007B),
-                      Color(0xFF3B005A),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(36),
-                  ),
-                ),
-                child: ListView.builder(
-                  itemCount: _keywords.length,
-                  itemBuilder: (context, index) {
-                    final keyword = _keywords[index];
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(26),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              keyword['keyword']!,
-                              style: const TextStyle(
-                                color: Color(0xFF4A007E),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 18,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              keyword['category']!,
-                              style: const TextStyle(
-                                color: Color(0xFF4A007E),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () => _editKeyword(index),
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF003B5C),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Icon(
-                                Icons.subject,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          InkWell(
-                            onTap: () => _deleteKeyword(index),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Color(0xFF8B0000),
-                              size: 20,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      // ================= NAVBAR FIX (ANTI-LOCK) =================
-      bottomNavigationBar: CustomBottomNavbar(
-        selectedIndex: 2,
-        onTap: (index) {
-          if (index == 2) return; // Mengabaikan klik jika sudah di halaman ini
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacementNamed(context, '/home');
-              break;
-            case 1:
-              Navigator.pushReplacementNamed(context, '/history');
-              break;
-            case 2:
-              break;
-            case 3:
-              // ✅ SEKARANG DISERAGAMKAN: Menggunakan pushReplacementNamed agar langsung lancar tanpa terkunci!
-              Navigator.pushReplacementNamed(context, '/profile');
-              break;
-          }
-        },
-      ),
-    );
+  void initState() {
+    super.initState();
+    _loadKeywords();
   }
 
-  // ================= HEADER =================
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(30, 22, 30, 40),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF6500A3),
-            Color(0xFF50007B),
-          ],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(40),
-          bottomRight: Radius.circular(40),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Image.asset(
-                    'assets/images/tubemod_text.png',
-                    height: 28,
-                    fit: BoxFit.contain,
-                  ),
-                ],
-              ),
-              const Icon(
-                Icons.menu_rounded,
-                color: Colors.white,
-                size: 30,
-              ),
-            ],
-          ),
-          const SizedBox(height: 55),
-          const SizedBox(
-            width: 270,
-            child: Text(
-              'One tool to manage\ntoxic comments\nin your YouTube\nchannels.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                height: 1.15,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  /// Load keywords dari API
+  Future<void> _loadKeywords() async {
+    try {
+      setState(() => isLoading = true);
 
-  void _addKeyword() {
-    if (_keywordController.text.isNotEmpty &&
-        _categoryController.text.isNotEmpty) {
-      setState(() {
-        KeywordRepository.add(
-          _keywordController.text.trim(),
-          _categoryController.text.trim(),
-        );
-        _keywordController.clear();
-        _categoryController.clear();
-      });
+      final result = await ApiService.getKeywords();
+
+      if (result != null) {
+        setState(() {
+          // Menyalin list dan mengurutkan berdasarkan ID terbesar di paling atas (data baru)
+          keywords = List<Map<String, dynamic>>.from(result);
+          keywords.sort((a, b) => (b['id'] ?? 0).compareTo(a['id'] ?? 0));
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+        _showErrorSnackBar('Failed to load keywords');
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      debugPrint('ERROR: $e');
+      _showErrorSnackBar('Error: $e');
     }
   }
 
-  void _editKeyword(int index) {
-    _keywordController.text = _keywords[index]['keyword']!;
-    _categoryController.text = _keywords[index]['category']!;
+  /// Add new keyword
+  Future<void> _addKeyword() async {
+    if (_keywordController.text.isEmpty || _categoryController.text.isEmpty) {
+      _showErrorSnackBar('Please fill in all fields');
+      return;
+    }
 
+    try {
+      setState(() => isAdding = true);
+
+      final success = await ApiService.addKeyword(
+        word: _keywordController.text.trim(),
+        category: _categoryController.text.trim(),
+      );
+
+      setState(() => isAdding = false);
+
+      if (success) {
+        _keywordController.clear();
+        _categoryController.clear();
+        _showSuccessSnackBar('Keyword added successfully');
+        _loadKeywords(); // Refresh list akan otomatis menaruh yang baru di paling atas
+      } else {
+        _showErrorSnackBar('Failed to add keyword');
+      }
+    } catch (e) {
+      setState(() => isAdding = false);
+      debugPrint('ERROR ADD: $e');
+      _showErrorSnackBar('Error: $e');
+    }
+  }
+
+  /// Update existing keyword
+  Future<void> _updateKeyword() async {
+    if (editingKeywordId == null ||
+        _keywordController.text.isEmpty ||
+        _categoryController.text.isEmpty) {
+      _showErrorSnackBar('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setState(() => isAdding = true);
+
+      final success = await ApiService.updateKeyword(
+        keywordId: editingKeywordId!,
+        word: _keywordController.text.trim(),
+        category: _categoryController.text.trim(),
+      );
+
+      setState(() => isAdding = false);
+
+      if (success) {
+        _keywordController.clear();
+        _categoryController.clear();
+        setState(() => editingKeywordId = null);
+        _showSuccessSnackBar('Keyword updated successfully');
+        _loadKeywords(); // Refresh list
+      } else {
+        _showErrorSnackBar('Failed to update keyword');
+      }
+    } catch (e) {
+      setState(() => isAdding = false);
+      debugPrint('ERROR UPDATE: $e');
+      _showErrorSnackBar('Error: $e');
+    }
+  }
+
+  /// Delete keyword
+  Future<void> _deleteKeyword(int keywordId) async {
+    try {
+      final confirmed = await _showConfirmDialog(
+        'Delete this keyword?',
+      );
+
+      if (!confirmed) return;
+
+      final success = await ApiService.deleteKeyword(keywordId);
+
+      if (success) {
+        setState(() {
+          keywords.removeWhere((k) => k['id'] == keywordId);
+        });
+        _showSuccessSnackBar('Keyword deleted successfully');
+      } else {
+        _showErrorSnackBar('Failed to delete keyword');
+      }
+    } catch (e) {
+      debugPrint('ERROR DELETE: $e');
+      _showErrorSnackBar('Error: $e');
+    }
+  }
+
+  /// Prepare edit mode
+  void _prepareEdit(Map<String, dynamic> keyword) {
+    setState(() {
+      editingKeywordId = keyword['id'];
+      _keywordController.text = keyword['word'] ?? '';
+      _categoryController.text = keyword['category'] ?? '';
+    });
+
+    // Show edit dialog
+    _showEditDialog(keyword);
+  }
+
+  /// Show edit dialog
+  void _showEditDialog(Map<String, dynamic> keyword) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -373,21 +198,14 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
             onPressed: () {
               _keywordController.clear();
               _categoryController.clear();
+              setState(() => editingKeywordId = null);
               Navigator.pop(context);
             },
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              setState(() {
-                KeywordRepository.updateAt(
-                  index,
-                  _keywordController.text.trim(),
-                  _categoryController.text.trim(),
-                );
-                _keywordController.clear();
-                _categoryController.clear();
-              });
+              _updateKeyword();
               Navigator.pop(context);
             },
             child: const Text('Save'),
@@ -397,9 +215,355 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
     );
   }
 
-  void _deleteKeyword(int index) {
-    setState(() {
-      KeywordRepository.removeAt(index);
-    });
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<bool> _showConfirmDialog(String message) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Confirm'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  @override
+  void dispose() {
+    _keywordController.dispose();
+    _categoryController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9F9F9),
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // ================= IMPLEMENTASI CUSTOM HEADER =================
+              const CustomHeader(
+                subtitle: 'One tool to manage\ntoxic comments\nin your YouTube\nchannels.',
+              ),
+
+              const SizedBox(height: 24),
+
+              // ================= TITLE =================
+              Center(
+                child: Text(
+                  'Keywords Management',
+                  style: GoogleFonts.montserrat(
+                    color: const Color(0xFF4A007E),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ================= INPUT =================
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(
+                            color: const Color(0xFF4A007E),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _keywordController,
+                                textAlign: TextAlign.center,
+                                decoration: const InputDecoration(
+                                  hintText: 'Keyword',
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                    fontSize: 14,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: 24,
+                              color: Colors.grey.shade400,
+                            ),
+                            Expanded(
+                              child: TextField(
+                                controller: _categoryController,
+                                textAlign: TextAlign.center,
+                                decoration: const InputDecoration(
+                                  hintText: 'Category',
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                    fontSize: 14,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF4A007E),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(26),
+                          onTap: isAdding
+                              ? null
+                              : (editingKeywordId != null
+                                  ? _updateKeyword
+                                  : _addKeyword),
+                          child: Icon(
+                            editingKeywordId != null ? Icons.check : Icons.add,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ================= KEYWORDS LIST (CARD UTUH) =================
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.all(20), // Disamakan paddingnya agar seimbang
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF50007B),
+                      Color(0xFF3B005A),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(24), // Menggunakan circular agar menjadi 1 card utuh
+                ),
+                child: isLoading
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 40),
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      )
+                    : keywords.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 40),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.key,
+                                    size: 60,
+                                    color: Colors.white.withOpacity(0.3),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No keywords yet',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Add your first keyword',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.4),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: keywords.length,
+                            itemBuilder: (context, index) {
+                              final keyword = keywords[index];
+                              final isEditing =
+                                  editingKeywordId == keyword['id'];
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isEditing
+                                      ? Colors.yellow.shade100
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(26),
+                                  border: isEditing
+                                      ? Border.all(
+                                          color: Colors.yellow.shade700,
+                                          width: 2,
+                                        )
+                                      : null,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            keyword['word'] ?? '',
+                                            style: const TextStyle(
+                                              color: Color(0xFF4A007E),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            keyword['category'] ?? '',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 11,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () => _prepareEdit(keyword),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF003B5C),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        child: const Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                          size: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    InkWell(
+                                      onTap: () =>
+                                          _deleteKeyword(keyword['id']),
+                                      child: const Icon(
+                                        Icons.delete,
+                                        color: Color(0xFF8B0000),
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+              ),
+
+              // ================= SPACE DI BAWAH CARD =================
+              const SizedBox(height: 40), // Memberikan jarak agar bagian bawah list tidak terpotong Navbar
+            ],
+          ),
+        ),
+      ),
+
+      // ================= NAVBAR =================
+      bottomNavigationBar: CustomBottomNavbar(
+        selectedIndex: 2,
+        onTap: (index) {
+          if (index == 2) return;
+
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
+            case 1:
+              Navigator.pushReplacementNamed(context, '/history');
+              break;
+            case 2:
+              break;
+            case 3:
+              Navigator.pushReplacementNamed(context, '/profile');
+              break;
+          }
+        },
+      ),
+    );
   }
 }

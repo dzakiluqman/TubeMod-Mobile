@@ -60,7 +60,7 @@ class _LoginPopupState extends State<LoginPopup> {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Welcome back, $userName! 🎉'),
+            content: Text('Welcome back, $userName!'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 2),
           ),

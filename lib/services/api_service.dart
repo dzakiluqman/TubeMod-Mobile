@@ -1,375 +1,361 @@
-// lib/services/api_service.dart
-// 
-// Example of how to use the proxy for all API endpoints
-// Replace your existing direct API calls with these proxy-based methods
-
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:developer' as developer;
-import 'auth_service.dart';
+import '../core/utils/session_manager.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://tubemod.online';
+  static const String baseUrl = 'https://1176-27-124-95-122.ngrok-free.app/TUBEMOD-NGROK';
 
-  /// ============= ANALYZE ENDPOINTS =============
+  static Future<http.Response> _request(
+    String endpoint,
+    String method, {
+    Map<String, dynamic>? data,
+  }) async {
+    final url = Uri.parse('$baseUrl$endpoint');
 
-  /// POST /api/analyze
+    // Mengambil header otomatis dari SessionManager
+    final headers = SessionManager.instance.getAuthHeaders();
+    headers['ngrok-skip-browser-warning'] = 'true'; // Bypass Ngrok
+
+    try {
+      switch (method.toUpperCase()) {
+        case 'POST':
+          return await http.post(
+            url,
+            headers: headers,
+            body: jsonEncode(data),
+          ).timeout(const Duration(seconds: 40));
+        case 'PUT':
+          return await http.put(
+            url,
+            headers: headers,
+            body: jsonEncode(data),
+          ).timeout(const Duration(seconds: 40));
+        case 'DELETE':
+          return await http.delete(
+            url,
+            headers: headers,
+            body: jsonEncode(data),
+          ).timeout(const Duration(seconds: 40));
+        case 'GET':
+        default:
+          return await http.get(
+            url,
+            headers: headers,
+          ).timeout(const Duration(seconds: 40));
+      }
+    } catch (e) {
+      print('====== [API ERROR] Request failed: $e ======');
+      rethrow;
+    }
+  }
+
+  // ==================== ANALYZE ENDPOINTS ====================
+
   /// Analyze YouTube video comments
-  static Future<Map<String, dynamic>?> analyzeComments({
+  static Future<Map<String, dynamic>?> analyzeVideo({
     required String youtubeUrl,
-    String? googleAccessToken,
-    bool filterFonts = false,
+    bool applyFontFilter = false,
   }) async {
     try {
-      final response = await AuthService().makeProxyRequest(
-        action: 'analyze',
-        method: 'POST',
+      final response = await _request(
+        '/api/analyze',
+        'POST',
         data: {
           'youtube_url': youtubeUrl,
-          'google_access_token': googleAccessToken,
-          'filter_fonts': filterFonts,
+          'apply_font_filter': applyFontFilter,
         },
       );
 
+      print('====== [API DEBUG] Analyze Status: ${response.statusCode} ======');
+
       if (response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        if (jsonResponse?['status'] == 'success') {
-          return jsonResponse?['data'];
+        final json = jsonDecode(response.body);
+        if (json['status'] == 'success') {
+          return json['data'];
         } else {
-          developer.log('[ApiService] Analyze error: ${jsonResponse?['message']}');
+          print('====== [API ERROR] ${json['message']} ======');
         }
       } else {
-        developer.log('[ApiService] Analyze failed with code ${response.statusCode}');
+        print('====== [API ERROR] Status: ${response.statusCode} ======');
       }
-      return null;
     } catch (e) {
-      developer.log('[ApiService] Error analyzing comments', error: e);
-      return null;
+      print('====== [API ERROR] Analyze: $e ======');
     }
+    return null;
   }
 
-  /// POST /api/analyze/deleteSingle
-  /// Delete a single comment
-  static Future<bool> deleteSingleComment({
+  /// Delete single comment
+  static Future<bool> deleteComment({
     required String commentId,
-    required String googleAccessToken,
   }) async {
     try {
-      final response = await AuthService().makeProxyRequest(
-        action: 'analyze_delete_single',
-        method: 'POST',
+      final response = await _request(
+        '/api/analyze/delete',
+        'POST',
         data: {
           'comment_id': commentId,
-          'google_access_token': googleAccessToken,
         },
       );
 
       if (response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        return jsonResponse?['status'] == 'success';
+        final json = jsonDecode(response.body);
+        return json['status'] == 'success';
       }
-      return false;
     } catch (e) {
-      developer.log('[ApiService] Error deleting single comment', error: e);
-      return false;
+      print('====== [API ERROR] Delete Comment: $e ======');
     }
+    return false;
   }
 
-  /// POST /api/analyze/deleteAll
-  /// Bulk delete toxic comments
-  static Future<Map<String, dynamic>?> deleteAllToxicComments({
-    required String googleAccessToken,
+  /// Delete all toxic comments
+  static Future<Map<String, dynamic>?> deleteAllComments({
+    required List<Map<String, dynamic>> comments,
     required String videoId,
     required String videoTitle,
     required int totalComments,
-    required List<Map<String, dynamic>> toxicComments,
   }) async {
     try {
-      final response = await AuthService().makeProxyRequest(
-        action: 'analyze_delete_all',
-        method: 'POST',
+      final response = await _request(
+        '/api/analyze/delete-all',
+        'POST',
         data: {
-          'google_access_token': googleAccessToken,
+          'comments': comments,
           'video_id': videoId,
           'video_title': videoTitle,
           'total_comments': totalComments,
-          'toxic_comments': toxicComments,
         },
       );
 
       if (response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        if (jsonResponse?['status'] == 'success') {
-          return jsonResponse?['data'];
+        final json = jsonDecode(response.body);
+        if (json['status'] == 'success') {
+          return json['data'];
         }
       }
-      return null;
     } catch (e) {
-      developer.log('[ApiService] Error deleting all toxic comments', error: e);
-      return null;
+      print('====== [API ERROR] Delete All Comments: $e ======');
     }
+    return null;
   }
 
-  /// ============= KEYWORD ENDPOINTS =============
+  // ==================== KEYWORD ENDPOINTS ====================
 
-  /// GET /api/keyword
-  /// Get all user keywords
+  /// Get all keywords for user
   static Future<List<Map<String, dynamic>>?> getKeywords() async {
     try {
-      final response = await AuthService().makeProxyRequest(
-        action: 'keyword',
-        method: 'GET',
-      );
+      final response = await _request('/api/keyword', 'GET');
+
+      print('====== [API DEBUG] Keywords Status: ${response.statusCode} ======');
 
       if (response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        if (jsonResponse?['status'] == 'success') {
-          final data = jsonResponse?['data'];
-          if (data is List) {
-            return List<Map<String, dynamic>>.from(data);
-          }
+        final json = jsonDecode(response.body);
+        if (json['status'] == 'success') {
+          final data = json['data'] as Map<String, dynamic>;
+          return List<Map<String, dynamic>>.from(data['keywords'] ?? []);
+        } else {
+          print('====== [API ERROR] ${json['message']} ======');
         }
       }
-      return null;
     } catch (e) {
-      developer.log('[ApiService] Error fetching keywords', error: e);
-      return null;
+      print('====== [API ERROR] Get Keywords: $e ======');
     }
+    return null;
   }
 
-  /// POST /api/keyword/add
-  /// Add a new keyword
+  /// Add new keyword
   static Future<bool> addKeyword({
     required String word,
     required String category,
   }) async {
     try {
-      if (word.isEmpty || category.isEmpty) {
-        developer.log('[ApiService] Word and category cannot be empty');
-        return false;
-      }
-
-      final response = await AuthService().makeProxyRequest(
-        action: 'keyword_add',
-        method: 'POST',
+      final response = await _request(
+        '/api/keyword',
+        'POST',
         data: {
           'word': word,
           'category': category,
         },
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        return jsonResponse?['status'] == 'success';
+      print('====== [API DEBUG] Add Keyword Status: ${response.statusCode} ======');
+
+      if (response.statusCode == 201) {
+        final json = jsonDecode(response.body);
+        return json['status'] == 'success';
       }
-      return false;
     } catch (e) {
-      developer.log('[ApiService] Error adding keyword', error: e);
-      return false;
+      print('====== [API ERROR] Add Keyword: $e ======');
     }
+    return false;
   }
 
-  /// PUT/POST /api/keyword/update
-  /// Update an existing keyword
+  /// Update existing keyword
   static Future<bool> updateKeyword({
-    required int id,
+    required int keywordId,
     required String word,
     required String category,
   }) async {
     try {
-      if (word.isEmpty || category.isEmpty) {
-        developer.log('[ApiService] Word and category cannot be empty');
-        return false;
-      }
-
-      final response = await AuthService().makeProxyRequest(
-        action: 'keyword_update',
-        method: 'PUT',
+      final response = await _request(
+        '/api/keyword',
+        'PUT',
         data: {
-          'id': id,
+          'id': keywordId,
           'word': word,
           'category': category,
         },
       );
 
+      print('====== [API DEBUG] Update Keyword Status: ${response.statusCode} ======');
+
       if (response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        return jsonResponse?['status'] == 'success';
+        final json = jsonDecode(response.body);
+        return json['status'] == 'success';
       }
-      return false;
     } catch (e) {
-      developer.log('[ApiService] Error updating keyword', error: e);
-      return false;
+      print('====== [API ERROR] Update Keyword: $e ======');
     }
+    return false;
   }
 
-  /// DELETE /api/keyword/delete/{id}
-  /// Delete a keyword
-  static Future<bool> deleteKeyword(int id) async {
+  /// Delete keyword
+  static Future<bool> deleteKeyword(int keywordId) async {
     try {
-      final response = await AuthService().makeProxyRequest(
-        action: 'keyword_delete',
-        method: 'DELETE',
+      final response = await _request(
+        '/api/keyword',
+        'DELETE',
         data: {
-          'id': id,
+          'id': keywordId,
         },
       );
 
+      print('====== [API DEBUG] Delete Keyword Status: ${response.statusCode} ======');
+
       if (response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        return jsonResponse?['status'] == 'success';
+        final json = jsonDecode(response.body);
+        return json['status'] == 'success';
       }
-      return false;
     } catch (e) {
-      developer.log('[ApiService] Error deleting keyword', error: e);
-      return false;
+      print('====== [API ERROR] Delete Keyword: $e ======');
     }
+    return false;
   }
 
-  /// ============= HISTORY ENDPOINTS =============
+  // ==================== HISTORY ENDPOINTS ====================
 
-  /// GET /api/history
-  /// Get user's moderation history
-  static Future<List<Map<String, dynamic>>?> getHistory() async {
+  /// Get all analysis history with pagination
+  static Future<Map<String, dynamic>?> getHistory({
+    int page = 1,
+    int limit = 10,
+  }) async {
     try {
-      final response = await AuthService().makeProxyRequest(
-        action: 'history',
-        method: 'GET',
+      final response = await _request(
+        '/api/history?page=$page&limit=$limit',
+        'GET',
       );
 
+      print('====== [API DEBUG] History Status: ${response.statusCode} ======');
+
       if (response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        if (jsonResponse?['status'] == 'success') {
-          final data = jsonResponse?['data'];
-          if (data is List) {
-            return List<Map<String, dynamic>>.from(data);
-          }
+        final json = jsonDecode(response.body);
+        if (json['status'] == 'success') {
+          return json['data'];
+        } else {
+          print('====== [API ERROR] ${json['message']} ======');
         }
       }
-      return null;
     } catch (e) {
-      developer.log('[ApiService] Error fetching history', error: e);
-      return null;
+      print('====== [API ERROR] Get History: $e ======');
     }
+    return null;
   }
 
-  /// DELETE /api/history/delete/{id}
-  /// Delete a history record
-  static Future<bool> deleteHistoryRecord(int id) async {
+  /// Get history detail for specific video
+  static Future<Map<String, dynamic>?> getHistoryDetail(String videoId) async {
     try {
-      final response = await AuthService().makeProxyRequest(
-        action: 'history_delete',
-        method: 'DELETE',
+      final response = await _request(
+        '/api/history/detail',
+        'POST',
         data: {
-          'id': id,
+          'video_id': videoId,
+        },
+      );
+
+      print('====== [API DEBUG] History Detail Status: ${response.statusCode} ======');
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['status'] == 'success') {
+          return json['data'];
+        }
+      }
+    } catch (e) {
+      print('====== [API ERROR] Get History Detail: $e ======');
+    }
+    return null;
+  }
+
+  /// Delete history record
+  static Future<bool> deleteHistory(int historyId) async {
+    try {
+      final response = await _request(
+        '/api/history/delete',
+        'POST',
+        data: {
+          'id': historyId,
+        },
+      );
+
+      print('====== [API DEBUG] Delete History Status: ${response.statusCode} ======');
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return json['status'] == 'success';
+      }
+    } catch (e) {
+      print('====== [API ERROR] Delete History: $e ======');
+    }
+    return false;
+  }
+
+  /// Search history by query
+  static Future<List<Map<String, dynamic>>?> searchHistory(String query) async {
+    try {
+      final response = await _request(
+        '/api/history/search',
+        'POST',
+        data: {
+          'query': query,
         },
       );
 
       if (response.statusCode == 200) {
-        final jsonResponse = _safeJsonDecode(response.body);
-        return jsonResponse?['status'] == 'success';
+        final json = jsonDecode(response.body);
+        if (json['status'] == 'success') {
+          final data = json['data'] as Map<String, dynamic>;
+          return List<Map<String, dynamic>>.from(data['results'] ?? []);
+        }
       }
-      return false;
     } catch (e) {
-      developer.log('[ApiService] Error deleting history record', error: e);
-      return false;
+      print('====== [API ERROR] Search History: $e ======');
     }
+    return null;
   }
 
-  /// ============= HELPER METHODS =============
-
-  /// Safely decode JSON response
-  static Map<String, dynamic>? _safeJsonDecode(String jsonString) {
+  /// Get user statistics
+  static Future<Map<String, dynamic>?> getStatistics() async {
     try {
-      if (jsonString.isEmpty) return null;
-      return jsonDecode(jsonString) as Map<String, dynamic>;
+      final response = await _request('/api/history/stats', 'GET');
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['status'] == 'success') {
+          return json['data'];
+        }
+      }
     } catch (e) {
-      developer.log('[ApiService] JSON decode error', error: e);
-      return null;
+      print('====== [API ERROR] Get Statistics: $e ======');
     }
-  }
-
-  /// Handle API error responses
-  static String? extractErrorMessage(http.Response response) {
-    try {
-      final jsonResponse = _safeJsonDecode(response.body);
-      return jsonResponse?['message'] ?? 'Unknown error';
-    } catch (e) {
-      return 'Failed to parse error response';
-    }
+    return null;
   }
 }
-
-/// ============= USAGE EXAMPLES =============
-
-/*
-// Example 1: Analyze comments
-void analyzeVideo() async {
-  final result = await ApiService.analyzeComments(
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    googleAccessToken: 'your_access_token',
-    filterFonts: true,
-  );
-
-  if (result != null) {
-    print('Total comments: ${result['total_comments']}');
-    print('Toxic comments: ${result['toxic_comments_count']}');
-  } else {
-    print('Analysis failed');
-  }
-}
-
-// Example 2: Add keyword
-void addNewKeyword() async {
-  final success = await ApiService.addKeyword(
-    word: 'spam',
-    category: 'Spam',
-  );
-
-  if (success) {
-    print('Keyword added successfully');
-  } else {
-    print('Failed to add keyword');
-  }
-}
-
-// Example 3: Get all keywords
-void loadKeywords() async {
-  final keywords = await ApiService.getKeywords();
-
-  if (keywords != null) {
-    for (var kw in keywords) {
-      print('${kw['word']} - ${kw['category']}');
-    }
-  } else {
-    print('Failed to load keywords');
-  }
-}
-
-// Example 4: Bulk delete toxic comments
-void cleanToxicComments(List<Map<String, dynamic>> toxicComments) async {
-  final result = await ApiService.deleteAllToxicComments(
-    googleAccessToken: 'your_access_token',
-    videoId: 'dQw4w9WgXcQ',
-    videoTitle: 'My Awesome Video',
-    totalComments: 150,
-    toxicComments: toxicComments,
-  );
-
-  if (result != null) {
-    print('Deleted: ${result['deleted_count']}');
-    print('Hidden: ${result['hidden_count']}');
-  }
-}
-
-// Example 5: Get moderation history
-void loadHistory() async {
-  final history = await ApiService.getHistory();
-
-  if (history != null) {
-    for (var record in history) {
-      print('${record['video_title']} - ${record['deleted_comments']} deleted');
-    }
-  }
-}
-*/

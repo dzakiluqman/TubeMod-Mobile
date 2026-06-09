@@ -43,7 +43,7 @@ class IntroScreen extends StatelessWidget {
                       fit: BoxFit.contain,
                     ),
 
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 24),
 
                     // TITLE
                     const Text(
@@ -56,14 +56,17 @@ class IntroScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const Spacer(),
+                    const SizedBox(height: 16),
 
                     // ILLUSTRATION
-                    Center(
-                      child: Image.asset(
-                        '',
-                        height: 320,
-                        fit: BoxFit.contain,
+                    Flexible(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child : Image.asset(
+                          'assets/images/ilustrasi_intro.png',
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ],

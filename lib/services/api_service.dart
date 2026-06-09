@@ -5,6 +5,8 @@ import '../core/utils/session_manager.dart';
 class ApiService {
   static const String baseUrl = 'https://1176-27-124-95-122.ngrok-free.app/TUBEMOD-NGROK';
 
+  static bool filterNonOriginalFonts = false;
+
   static Future<http.Response> _request(
     String endpoint,
     String method, {
@@ -54,7 +56,7 @@ class ApiService {
   /// Analyze YouTube video comments
   static Future<Map<String, dynamic>?> analyzeVideo({
     required String youtubeUrl,
-    bool applyFontFilter = false,
+    bool? applyFontFilter,
   }) async {
     try {
       final response = await _request(
@@ -62,7 +64,7 @@ class ApiService {
         'POST',
         data: {
           'youtube_url': youtubeUrl,
-          'apply_font_filter': applyFontFilter,
+          'apply_font_filter': applyFontFilter ?? ApiService.filterNonOriginalFonts,
         },
       );
 

@@ -8,7 +8,8 @@ import '../../services/api_service.dart';
 
 class AnalysisResultScreen extends StatefulWidget {
   final String videoId;
-  const AnalysisResultScreen({Key? key, required this.videoId}) : super(key: key);
+  final bool applyFontFilter;
+  const AnalysisResultScreen({Key? key, required this.videoId, this.applyFontFilter = false}) : super(key: key);
 
   @override
   State<AnalysisResultScreen> createState() => _AnalysisResultScreenState();
@@ -34,7 +35,7 @@ class _AnalysisResultScreenState extends State<AnalysisResultScreen> {
 
       final result = await ApiService.analyzeVideo(
         youtubeUrl: 'https://www.youtube.com/watch?v=${widget.videoId}',
-        applyFontFilter: true,
+        applyFontFilter: ApiService.filterNonOriginalFonts,
       );
 
       if (result != null) {

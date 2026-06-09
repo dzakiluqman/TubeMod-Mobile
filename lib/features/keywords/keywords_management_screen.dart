@@ -80,7 +80,7 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
         _keywordController.clear();
         _categoryController.clear();
         _showSuccessSnackBar('Keyword added successfully');
-        _loadKeywords(); // Refresh list akan otomatis menaruh yang baru di paling atas
+        _loadKeywords();
       } else {
         _showErrorSnackBar('Failed to add keyword');
       }
@@ -292,6 +292,50 @@ class _KeywordsManagementScreenState extends State<KeywordsManagementScreen> {
               ),
 
               const SizedBox(height: 20),
+
+              // === TAMBAHKAN TOGGLE FONT FILTER DI SINI (SEPERTI VERSI WEB) ===
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(26),
+                    border: Border.all(
+                      color: const Color(0xFF4A007E),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Filter non-original YouTube fonts?',
+                          style: TextStyle(
+                            color: Color(0xFF4A007E),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: ApiService.filterNonOriginalFonts, // Mengambil nilai dari "session"
+                        activeColor: const Color(0xFF4A007E),
+                        onChanged: (bool value) {
+                          setState(() {
+                            ApiService.filterNonOriginalFonts = value; // Simpan perubahan nilai
+                          });
+                          _showSuccessSnackBar(
+                            value ? 'Font filter activated' : 'Font filter deactivated',
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20), // Beri jarak ke input bawah
 
               // ================= INPUT =================
               Padding(

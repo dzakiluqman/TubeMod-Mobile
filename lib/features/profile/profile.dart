@@ -82,7 +82,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // IMPLEMENTASI: CustomHeader disamakan persis dengan home_screen.dart
                 const CustomHeader(
                   subtitle: 'One tool to manage\ntoxic comments\nin your YouTube\nchannels.',
                 ),
